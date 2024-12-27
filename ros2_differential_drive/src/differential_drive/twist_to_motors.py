@@ -33,20 +33,29 @@ class TwistToMotors(Node):
         super(TwistToMotors, self).__init__("twist_to_motors")
         self.nodename = "twist_to_motors"
         self.get_logger().info("%s started" % self.nodename)
-        self.ard = serial.Serial("/dev/ttyUSB0",9600)
+        self.ard = serial.Serial("/dev/ttyUSB0",115200)
         self.w = self.declare_parameter("base_width", 0.45).value
-        self.dx = 0
-        self.dr = 0
-        self.ticks_since_target = 0
+        self.dx = 0.0
+        self.dr = 0.0
+        self.ticks_since_target = 0 #dis is useless
+        self.velct_min = 0.05
+        self.velct_max = 0.5
+        self.pwm_min = 40
+        self.pwm_max = 255
+        self.pwm = 0
 
         self.create_subscription(Twist, '/cmd_vel', self.twist_callback, 10)
 
         self.rate_hz = self.declare_parameter("rate_hz", 50).value
         
-        self.create_timer(1.0/self.rate_hz, self.calculate_left_and_right_target_and_give_values)
+        self.create_timer(1.0, self.calculate_left_and_right_target_and_give_values)
 
-    def write_ser_helpr(self,cmd): #useful for giving input to arduino but not useful curntly here.
-        self.ard.write(cmd.encode())
+    def velct_to_pwm(self,vel):
+
+        self.pwm = self.pwm_min + ((vel - self.velct_min)/(self.velct_max - self.velct_min)) * (self.pwm_max - self.pwm_min)
+
+        return self.pwm
+    
 
     def calculate_left_and_right_target_and_give_values(self):
         # dx = (l + r) / 2
@@ -55,14 +64,24 @@ class TwistToMotors(Node):
         right = Float32()
         left = Float32()
         
+        right.data = self.dx
+
         right.data = 1.0 * self.dx + self.dr * self.w / 2.0
         left.data = 1.0 * self.dx - self.dr * self.w / 2.0
-        right_data_to_Strng = str(right.data)
-        left_data_to_Strng = str(left.data)
 
-        left_and_rght_data_to_strng = left_data_to_Strng + right_data_to_Strng
+        print('right.data vel is ',right.data)
+        print('left.data vel is ',left.data)
+        intrplt_right_data = int(self.velct_to_pwm(right.data))
+        intrplt_left_data = int(self.velct_to_pwm(left.data))
+        print('intrplt_right_data is ',intrplt_right_data)
+        print('intrplt_left_data is ',intrplt_left_data)
 
-        self.write_ser_helpr(left_and_rght_data_to_strng)
+        right_data_to_Strng = str(intrplt_right_data)
+        left_data_to_Strng = str(intrplt_left_data)
+
+        left_and_rght_data_to_strng = left_data_to_Strng + ','+ right_data_to_Strng + ' '
+        print('left_and_rght_data_to_strng is ',left_and_rght_data_to_strng)
+        self.ard.write(left_and_rght_data_to_strng.encode())
         
         self.ticks_since_target += 1
 

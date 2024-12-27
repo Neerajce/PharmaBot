@@ -1,3 +1,9 @@
+// /*     Arduino Rotary Encoder Tutorial
+//  *      
+//  *  by Dejan Nedelkovski, www.HowToMechatronics.com
+//  *  
+//  */
+// //Encoder works well
 //   #include<Arduino.h>
 //   #include<ESP32Servo.h>
 
@@ -47,7 +53,7 @@
 
 //   attachInterrupt(digitalPinToInterrupt(EncoderPinA), updateEncoder, RISING); //Belongs to left motor
 //   attachInterrupt(digitalPinToInterrupt(EncoderPinC), updateEncoder_two, RISING); //Belongs to right motor
-//   Serial.begin(9600);
+//   Serial.begin(115200);
 // }
 
 // void loop() 
@@ -55,6 +61,8 @@
 //   if(Serial.available())
 //  {
 //       String s =  Serial.readString();
+//       Serial.print("s is ");
+//       Serial.print(s);
 //       String motor_left;
 //       String motor_right;
 
@@ -78,6 +86,10 @@
 //           {
 //             flg = 1;
 //           }
+//           if(d == ' ')
+//           {
+//             break;
+//           }
 //         }
 //       }
 //       motor_left_to_int = motor_left.toInt();
@@ -90,7 +102,7 @@
       
 //       digitalWrite(motorpin1_b,HIGH); //motor right
 //       digitalWrite(motorpin2_b,LOW);
-//      ledcWrite(1,motor_right_to_int);
+//       ledcWrite(1,motor_right_to_int);
 //      //ledcWrite(1,128);
 
 
@@ -98,14 +110,14 @@
 
 //   delay(1000);
 
-//   // Serial.print("motor left is");
-//   // Serial.print(motor_left_to_int);
-//   // Serial.print("motor right is");
-//   // Serial.println(motor_right_to_int);
+//   Serial.print("motor left is");
+//   Serial.print(motor_left_to_int);
+//   Serial.print("motor right is");
+//   Serial.print(motor_right_to_int);
 //   //Serial.print('e'); //here e stands for esp32. W send data from esp32 to our computer
-//   Serial.print(Encodervalue); //use dis for communictn wid computer
-//   Serial.print(',');
-//   Serial.println(Encodervalue_two);
+//   // Serial.print(Encodervalue); //use dis for communictn wid computer
+//   // Serial.print(',');
+//   // Serial.println(Encodervalue_two);
 
 
 // }
