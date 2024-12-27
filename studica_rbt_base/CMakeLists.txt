@@ -35,4 +35,10 @@ install(DIRECTORY
   DESTINATION share/${PROJECT_NAME}/
 )
 
+install(DIRECTORY
+  studica_rbt_base
+  DESTINATION lib/${PROJECT_NAME}/
+)
+
+
 ament_package()
