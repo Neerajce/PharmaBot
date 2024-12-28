@@ -26,6 +26,8 @@ import serial
 from math import sin, cos
 from nav_msgs.msg import Odometry
 from tf2_ros import TransformBroadcaster
+import numpy as np
+import math
 NS_TO_SEC= 1000000000
 
 class TwistToMotors(Node):
@@ -63,8 +65,8 @@ class TwistToMotors(Node):
         self.encoder_low_wrap = self.declare_parameter('wheel_low_wrap', (self.encoder_max - self.encoder_min) * 0.3 + self.encoder_min).value
         self.encoder_high_wrap = self.declare_parameter('wheel_high_wrap', (self.encoder_max - self.encoder_min) * 0.7 + self.encoder_min).value
 
-        self.pwm_motor_right_old = 0
-        self.pwm_motor_left_old = 0
+        self.encoder_ticks_right_old = 0
+        self.encoder_ticks_left_old = 0
 
         # internal data
         self.enc_left = None  # wheel encoder readings
@@ -73,8 +75,8 @@ class TwistToMotors(Node):
         self.right = 0.0
         self.lmult = 0.0
         self.rmult = 0.0
-        self.prev_lencoder = 0
-        self.prev_rencoder = 0
+        self.prevous_lft_encodr = 0
+        self.prevous_rght_encodr = 0
         self.x = 0.0  # position in xy plane
         self.y = 0.0
         self.th = 0.0
@@ -90,7 +92,7 @@ class TwistToMotors(Node):
         self.odom_broadcaster = TransformBroadcaster(self)
 
         self.create_subscription(Twist, '/cmd_vel', self.twist_callback, 10)
-        self.create_timer(1.0/self.rate_hz, self.update)  
+        self.create_timer(0.05, self.update)  
 
 
     def velct_to_pwm(self,vel):
@@ -98,6 +100,27 @@ class TwistToMotors(Node):
         self.pwm = self.pwm_min + ((vel - self.velct_min)/(self.velct_max - self.velct_min)) * (self.pwm_max - self.pwm_min)
 
         return self.pwm
+
+    def quaternion_from_euler(self,roll, pitch, yaw):
+        """
+        Converts euler roll, pitch, yaw to quaternion (w in last place)
+        quat = [x, y, z, w]
+        Bellow should be replaced when porting for ROS 2 Python tf_conversions is done.
+        """
+        cy = math.cos(yaw * 0.5)
+        sy = math.sin(yaw * 0.5)
+        cp = math.cos(pitch * 0.5)
+        sp = math.sin(pitch * 0.5)
+        cr = math.cos(roll * 0.5)
+        sr = math.sin(roll * 0.5)
+
+        q = [0] * 4
+        q[0] = cy * cp * cr + sy * sp * sr
+        q[1] = cy * cp * sr - sy * sp * cr
+        q[2] = sy * cp * sr + cy * sp * cr
+        q[3] = sy * cp * cr - cy * sp * sr
+
+        return q
 
     def update(self):
         now = self.get_clock().now()
@@ -132,6 +155,9 @@ class TwistToMotors(Node):
             self.y = self.y + (sin(self.th) * x + cos(self.th) * y)
         if th != 0:
             self.th = self.th + th
+        print('self.th is ',self.th)
+
+
 
         # publish the odom information
         quaternion = Quaternion()
@@ -139,11 +165,14 @@ class TwistToMotors(Node):
         quaternion.y = 0.0
         quaternion.z = sin(self.th / 2)
         quaternion.w = cos(self.th / 2)
+        # [r,p,yaw] = self.euler_from_quaternion(quaternion.x ,quaternion.y ,quaternion.z ,quaternion.w) using dis only for my conveninc
+
+        # [angle_one,angle_two,angle_three,angle_four] = self.quaternion_from_euler(r,p,yaw)
 
         transform_stamped_msg = TransformStamped()
         transform_stamped_msg.header.stamp = self.get_clock().now().to_msg()
-        transform_stamped_msg.header.frame_id = self.base_frame_id
-        transform_stamped_msg.child_frame_id = self.odom_frame_id
+        transform_stamped_msg.header.frame_id = self.odom_frame_id 
+        transform_stamped_msg.child_frame_id = self.base_frame_id
         transform_stamped_msg.transform.translation.x = self.x
         transform_stamped_msg.transform.translation.y = self.y
         transform_stamped_msg.transform.translation.z = 0.0
@@ -167,6 +196,27 @@ class TwistToMotors(Node):
         odom.twist.twist.angular.z = self.dr
         self.odom_pub.publish(odom)
 
+    def euler_from_quaternion(self,x, y, z, w): # dis isn't used
+        """
+        Convert a quaternion into euler angles (roll, pitch, yaw)
+        roll is rotation around x in radians (counterclockwise)
+        pitch is rotation around y in radians (counterclockwise)
+        yaw is rotation around z in radians (counterclockwise)
+        """
+        t0 = +2.0 * (w * x + y * z)
+        t1 = +1.0 - 2.0 * (x * x + y * y)
+        roll_x = math.atan2(t0, t1)
+     
+        t2 = +2.0 * (w * y - z * x)
+        t2 = +1.0 if t2 > +1.0 else t2
+        t2 = -1.0 if t2 < -1.0 else t2
+        pitch_y = math.asin(t2)
+     
+        t3 = +2.0 * (w * z + x * y)
+        t4 = +1.0 - 2.0 * (y * y + z * z)
+        yaw_z = math.atan2(t3, t4)
+     
+        return roll_x, pitch_y, yaw_z # in radians
 
     def fetch_encoder_data(self):
         line = self.ard.readline().decode("utf-8").strip()
@@ -176,44 +226,44 @@ class TwistToMotors(Node):
                 temp  = gh.split(',')
                 print(temp)
                 if temp[0] == '' or temp[1] == '':
-                    pwm_motor_right_fresh = self.pwm_motor_right_old
-                    pwm_motor_left_fresh = self.pwm_motor_left_old
+                    encoder_ticks_right_fresh = self.encoder_ticks_right_old
+                    encoder_ticks_left_fresh = self.encoder_ticks_left_old
                 else:
-                    pwm_motor_right_fresh = int(temp[0]) # when I keep dis +
-                    pwm_motor_left_fresh = -int(temp[1]) # and dis -ve, I get both + pwm values when moved forward
+                    encoder_ticks_right_fresh = int(temp[0]) # when I keep dis +
+                    encoder_ticks_left_fresh = -int(temp[1]) # and dis -ve, I get both + pwm values when moved forward
             else:
-                pwm_motor_left_fresh = self.pwm_motor_left_old
-                pwm_motor_right_fresh = self.pwm_motor_right_old
+                encoder_ticks_left_fresh = self.encoder_ticks_left_old
+                encoder_ticks_right_fresh = self.encoder_ticks_right_old
         except:
             print('error in fetching data, dus ignoring')
-            pwm_motor_right_fresh = self.pwm_motor_right_old
-            pwm_motor_left_fresh = self.pwm_motor_left_old
+            encoder_ticks_right_fresh = self.encoder_ticks_right_old
+            encoder_ticks_left_fresh = self.encoder_ticks_left_old
         
-        self.pwm_motor_right_old = pwm_motor_right_fresh
-        self.pwm_motor_left_old = pwm_motor_left_fresh
+        self.encoder_ticks_right_old = encoder_ticks_right_fresh
+        self.encoder_ticks_left_old = encoder_ticks_left_fresh
         print('encoder ticks left is')
-        print(pwm_motor_right_fresh)
+        print(encoder_ticks_right_fresh)
         print('encoder ticks right is')
-        print(pwm_motor_left_fresh)
-        enc_lft = pwm_motor_left_fresh
-        if enc_lft < self.encoder_low_wrap and self.prev_lencoder > self.encoder_high_wrap:
+        print(encoder_ticks_left_fresh)
+        enc_lft = encoder_ticks_left_fresh
+        if enc_lft < self.encoder_low_wrap and self.prevous_lft_encodr > self.encoder_high_wrap:
             self.lmult = self.lmult + 1
 
-        if enc_lft > self.encoder_high_wrap and self.prev_lencoder < self.encoder_low_wrap:
+        if enc_lft > self.encoder_high_wrap and self.prevous_lft_encodr < self.encoder_low_wrap:
             self.lmult = self.lmult - 1
 
         self.left = 1.0 * (enc_lft + self.lmult * (self.encoder_max - self.encoder_min))
-        self.prev_lencoder = enc_lft
+        self.prevous_lft_encodr = enc_lft
 
-        enc_rght = pwm_motor_right_fresh
-        if enc_rght < self.encoder_low_wrap and self.prev_rencoder > self.encoder_high_wrap:
+        enc_rght = encoder_ticks_right_fresh
+        if enc_rght < self.encoder_low_wrap and self.prevous_rght_encodr > self.encoder_high_wrap:
             self.rmult = self.rmult + 1
 
-        if enc_rght > self.encoder_high_wrap and self.prev_rencoder < self.encoder_low_wrap:
+        if enc_rght > self.encoder_high_wrap and self.prevous_rght_encodr < self.encoder_low_wrap:
             self.rmult = self.rmult - 1
 
         self.right = 1.0 * (enc_rght + self.rmult * (self.encoder_max - self.encoder_min))
-        self.prev_rencoder = enc_rght
+        self.prevous_rght_encodr = enc_rght
     
 
     def calculate_left_and_right_target_and_give_values(self):

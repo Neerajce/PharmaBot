@@ -164,7 +164,7 @@
 
 //   }
 
-//  delay(1000);
+// //  delay(1000);
 
 //   // Serial.print("motor left is");
 //   // Serial.print(motor_left_to_int);
