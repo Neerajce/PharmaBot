@@ -69,7 +69,7 @@ class DiffTf(Node):
         super().__init__("diff_tf")
         self.nodename = "diff_tf"
         self.get_logger().info(f"-I- {self.nodename} started")
-        self.ard = serial.Serial("/dev/ttyUSB0",9600)
+        self.ard = serial.Serial("/dev/ttyUSB0",115200)
 
         #### parameters #######
         self.rate_hz = self.declare_parameter("rate_hz", 10.0).value # the rate at which to publish the transform
@@ -85,6 +85,9 @@ class DiffTf(Node):
         self.encoder_max = self.declare_parameter('encoder_max', 32768).value
         self.encoder_low_wrap = self.declare_parameter('wheel_low_wrap', (self.encoder_max - self.encoder_min) * 0.3 + self.encoder_min).value
         self.encoder_high_wrap = self.declare_parameter('wheel_high_wrap', (self.encoder_max - self.encoder_min) * 0.7 + self.encoder_min).value
+
+        self.pwm_motor_right_old = 0
+        self.pwm_motor_left_old = 0
 
         # internal data
         self.enc_left = None  # wheel encoder readings
@@ -178,14 +181,23 @@ class DiffTf(Node):
 
     def fetch_encoder_data(self):
         line = self.ard.readline().decode("utf-8").strip()
-        temp  = line.split(',')
-        print(temp)
-        if temp[0] == '' or temp[1] == '':
-            pwm_motor_right_fresh = self.pwm_motor_right_old
-            pwm_motor_left_fresh = self.pwm_motor_left_old
+        print('line[0] is',line[0])
+        if line[0] == 'e':
+            gh = line.replace('e','')
+            temp  = gh.split(',')
+            print(temp)
+            if temp[0] == '' or temp[1] == '':
+                pwm_motor_right_fresh = self.pwm_motor_right_old
+                pwm_motor_left_fresh = self.pwm_motor_left_old
+            else:
+                pwm_motor_right_fresh = int(temp[0]) # when I keep dis +
+                pwm_motor_left_fresh = -int(temp[1]) # and dis -ve, I get both + pwm values when moved forward
         else:
-            pwm_motor_right_fresh = int(temp[0]) # when I keep dis +
-            pwm_motor_left_fresh = -int(temp[1]) # and dis -ve, I get both + pwm values when moved forward
+            pwm_motor_left_fresh = self.pwm_motor_left_old
+            pwm_motor_right_fresh = self.pwm_motor_right_old
+        
+        self.pwm_motor_right_old = pwm_motor_right_fresh
+        self.pwm_motor_left_old = pwm_motor_left_fresh
         print('pwm_motor_right_fresh is')
         print(pwm_motor_right_fresh)
         print('pwm_motor_left_fresh is')
