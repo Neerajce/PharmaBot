@@ -201,3 +201,88 @@
 //   }
 // }
 
+// #include<Arduino.h> d code works
+// #include<ESP32Servo.h>
+
+// Servo waist;
+// Servo sholdr;
+// Servo elbw;
+// Servo wrst_one;
+// Servo wrst_two;
+// Servo gripr;
+
+// int pos = 0;
+// int pos_two = 0;
+// int pos_thr = 0;
+
+// #define shldr_pin 22 //22
+// #define waist_pin 34
+// #define elbw_pin 33
+// #define wrst_one_pin 35
+// #define gripr_pin 27
+
+// void setup()
+// {
+//   ESP32PWM::allocateTimer(0);
+// 	ESP32PWM::allocateTimer(1);
+// 	ESP32PWM::allocateTimer(2);
+// 	ESP32PWM::allocateTimer(3);
+
+//   waist.setPeriodHertz(50);
+//   sholdr.setPeriodHertz(50);
+//   elbw.setPeriodHertz(50);
+//   wrst_one.setPeriodHertz(50);
+//   gripr.setPeriodHertz(50);
+
+//   waist.attach(waist_pin,1000,2000);
+//   sholdr.attach(shldr_pin,1000,2000);
+//   elbw.attach(elbw_pin,1000,2000);
+//   wrst_one.attach(wrst_one_pin,1000,2000);
+//   gripr.attach(gripr_pin,1000,2000);
+  
+//   // waist.write(40);
+//   // sholdr.write(40);
+// }
+
+// void loop()
+// {
+//   // waist.write(40);
+//   // sholdr.write(40);
+//   // elbw.write(90);
+//   // wrst_one.write(90);
+//   // gripr.write(90);
+//   for (pos = 0; pos <= 300; pos += 1) 
+//   { // goes from 0 degrees to 180 degrees
+//   // in steps of 1 degree
+//   elbw.write(pos);    // tell servo to go to position in variable 'pos'
+//   delay(15);             // waits 15ms for the servo to reach the position
+//   }
+// 	for (pos = 300; pos >= 0; pos -= 1) 
+//   { // goes from 180 degrees to 0 degrees
+// 		elbw.write(pos);    // tell servo to go to position in variable 'pos'
+// 		delay(15);             // waits 15ms for the servo to reach the position
+// 	}
+//   for (pos_two = 0; pos_two <= 300; pos_two += 1) 
+//     { // goes from 0 degrees to 180 degrees
+// 		// in steps of 1 degree
+// 		sholdr.write(pos_two);    // tell servo to go to position in variable 'pos'
+// 		delay(15);             // waits 15ms for the servo to reach the position
+// 	  }
+// 	for (pos_two = 300; pos_two >= 0; pos_two -= 1) 
+//   { // goes from 180 degrees to 0 degrees
+// 		sholdr.write(pos_two);    // tell servo to go to position in variable 'pos'
+// 		delay(15);             // waits 15ms for the servo to reach the position
+// 	}
+//   for (pos_thr = 0; pos_thr <= 300; pos_thr += 1) 
+//   { // goes from 0 degrees to 180 degrees
+//   // in steps of 1 degree
+//   elbw.write(pos_thr);    // tell servo to go to position in variable 'pos'
+//   delay(15);             // waits 15ms for the servo to reach the position
+//   }
+// 	for (pos_thr = 300; pos_thr >= 0; pos_thr -= 1) 
+//   { // goes from 180 degrees to 0 degrees
+// 		elbw.write(pos);    // tell servo to go to position in variable 'pos'
+// 		delay(15);             // waits 15ms for the servo to reach the position
+// 	}
+// //  elbw.write(270);
+// }
