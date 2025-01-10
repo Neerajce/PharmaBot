@@ -1,3 +1,9 @@
+/*     Arduino Rotary Encoder Tutorial
+ *      
+ *  by Dejan Nedelkovski, www.HowToMechatronics.com
+ *  
+ */
+//Encoder works well
 //   #include<Arduino.h>
 //   #include<ESP32Servo.h>
 
@@ -13,10 +19,30 @@
 // //motor control pins for motor B
 // #define motorpin1_b 5 //right motor
 // #define motorpin2_b 18
-// #define enablepin_b 4
+// #define enablepin_b 4 
+// //motor control pins for 5 robot arm servos
+// #define shldr_pin 19
+// #define waist_pin 23
+// #define elbw_pin 22
+// #define wrst_pin 32
+// #define gripr_pin 34
+
+// Servo waist;
+// Servo sholdr;
+// Servo elbw;
+// Servo wrst;
+// Servo gripr;
+
+// int pos_waist = 0;
+// int pos_sholdr = 0;
+// int pos_elbw = 0;
+// int pos_wrst = 0;
+// int pos_gripr = 0;
 
 // void updateEncoder();
+
 // void updateEncoder_two();
+
 // bool flg = 0;
 // int rpm_one;
 // int rpm_two;
@@ -24,9 +50,13 @@
 // int motor_left_to_int_old = 0;
 // int motor_right_to_int_old = 0;
 // int motor_right_to_int;
+
 // volatile long Encodervalue=0;
+
 // volatile long Encodervalue_two=0;
+
 // bool considr_numbr = 0;
+
 // void setup() 
 // {
 
@@ -42,6 +72,18 @@
 //   pinMode(motorpin2_b,OUTPUT);
 //   pinMode(enablepin_b,OUTPUT);
   
+//   ESP32PWM::allocateTimer(0);
+// 	ESP32PWM::allocateTimer(1);
+// 	ESP32PWM::allocateTimer(2);
+// 	ESP32PWM::allocateTimer(3);
+
+//   waist.setPeriodHertz(50);
+//   sholdr.setPeriodHertz(50);
+//   elbw.setPeriodHertz(50);
+//   wrst.setPeriodHertz(50);
+//   gripr.setPeriodHertz(50);
+
+
 //   ledcSetup(0, 1000, 8);
 //   ledcAttachPin(enablepin_a, 0); //motor_left
 
@@ -164,7 +206,7 @@
 
 //   }
 
-// //  delay(1000);
+//  // delay(1);
 
 //   // Serial.print("motor left is");
 //   // Serial.print(motor_left_to_int);

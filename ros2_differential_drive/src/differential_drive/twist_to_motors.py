@@ -22,6 +22,7 @@ from std_msgs.msg import Float32
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Quaternion
 from geometry_msgs.msg import TransformStamped
+from std_msgs.msg import String
 import serial
 from math import sin, cos
 from nav_msgs.msg import Odometry
@@ -92,6 +93,7 @@ class TwistToMotors(Node):
         self.odom_broadcaster = TransformBroadcaster(self)
 
         self.create_subscription(Twist, '/cmd_vel', self.twist_callback, 10)
+        self.create_subscription(String,'/robot_arm_angles_here',self.robot_arm_angls_clbck,10)
         self.create_timer(0.05, self.update)  
 
 
@@ -291,7 +293,7 @@ class TwistToMotors(Node):
         if intrplt_right_data > 255:
             intrplt_right_data = 255
         if intrplt_right_data < -255:
-            intrplt_right_data = -255
+            intrplts_right_data = -255
 
 
         right_data_to_Strng = str(intrplt_right_data)
@@ -303,7 +305,17 @@ class TwistToMotors(Node):
     
     def send_dta(self):
         self.ard.write(self.left_and_rght_data_to_strng.encode())
+        self.get_logger().error("SENT SERIAL PWM DATA")
         
+    def robot_arm_angls_clbck(self,msg):
+        if len(msg.data) == 0:
+            pass
+        else: # please write logic here for fetching robot angle data from user
+            wrd = msg.data
+            self.ard.write(wrd.encode())
+
+
+
 
     def twist_callback(self, msg):
         self.dx = msg.linear.x
