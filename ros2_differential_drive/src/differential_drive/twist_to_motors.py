@@ -1,20 +1,5 @@
 #!/usr/bin/env python
 
-# Copyright (C) 2012 Jon Stephan.
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 
 import rclpy
 from rclpy.node import Node
@@ -22,7 +7,6 @@ from std_msgs.msg import Float32
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Quaternion
 from geometry_msgs.msg import TransformStamped
-from std_msgs.msg import String
 import serial
 from math import sin, cos
 from nav_msgs.msg import Odometry
@@ -88,13 +72,12 @@ class TwistToMotors(Node):
         self.left_and_rght_data_to_strng = 'c0,0'
 
         # publisher and timer
-        self.create_timer(0.1,self.fetch_encoder_data)
+        self.create_timer(0.005,self.fetch_encoder_data)
         self.odom_pub = self.create_publisher(Odometry, "odom", 10)
         self.odom_broadcaster = TransformBroadcaster(self)
 
         self.create_subscription(Twist, '/cmd_vel', self.twist_callback, 10)
-        self.create_subscription(String,'/robot_arm_angles_here',self.robot_arm_angls_clbck,10)
-        self.create_timer(0.05, self.update)  
+        self.create_timer(0.08, self.update)  
 
 
     def velct_to_pwm(self,vel):
@@ -231,8 +214,8 @@ class TwistToMotors(Node):
                     encoder_ticks_right_fresh = self.encoder_ticks_right_old
                     encoder_ticks_left_fresh = self.encoder_ticks_left_old
                 else:
-                    encoder_ticks_right_fresh = int(temp[0]) # when I keep dis +
-                    encoder_ticks_left_fresh = -int(temp[1]) # and dis -ve, I get both + pwm values when moved forward
+                    encoder_ticks_right_fresh = int(temp[1]) # when I keep dis +
+                    encoder_ticks_left_fresh = -int(temp[0]) # and dis -ve, I get both + pwm values when moved forward
             else:
                 encoder_ticks_left_fresh = self.encoder_ticks_left_old
                 encoder_ticks_right_fresh = self.encoder_ticks_right_old
@@ -293,7 +276,7 @@ class TwistToMotors(Node):
         if intrplt_right_data > 255:
             intrplt_right_data = 255
         if intrplt_right_data < -255:
-            intrplts_right_data = -255
+            intrplt_right_data = -255
 
 
         right_data_to_Strng = str(intrplt_right_data)
@@ -305,17 +288,7 @@ class TwistToMotors(Node):
     
     def send_dta(self):
         self.ard.write(self.left_and_rght_data_to_strng.encode())
-        self.get_logger().error("SENT SERIAL PWM DATA")
         
-    def robot_arm_angls_clbck(self,msg):
-        if len(msg.data) == 0:
-            pass
-        else: # please write logic here for fetching robot angle data from user
-            wrd = msg.data
-            self.ard.write(wrd.encode())
-
-
-
 
     def twist_callback(self, msg):
         self.dx = msg.linear.x
