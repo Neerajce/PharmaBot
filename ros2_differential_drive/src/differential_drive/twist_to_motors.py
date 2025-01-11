@@ -72,7 +72,7 @@ class TwistToMotors(Node):
         self.left_and_rght_data_to_strng = 'c0,0'
 
         # publisher and timer
-        self.create_timer(0.005,self.fetch_encoder_data)
+        self.create_timer(0.001,self.fetch_encoder_data)
         self.odom_pub = self.create_publisher(Odometry, "odom", 10)
         self.odom_broadcaster = TransformBroadcaster(self)
 

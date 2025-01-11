@@ -164,7 +164,7 @@
 
 //   }
 
-//  delay(10);
+//  //delay(1);
 // //  delay(1000);
 
 //   // Serial.print("motor left is");
