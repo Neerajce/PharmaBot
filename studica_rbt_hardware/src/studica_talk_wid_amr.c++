@@ -122,6 +122,7 @@
 //         digitalWrite(motorpin1_b,HIGH); //motor right
 //         digitalWrite(motorpin2_b,LOW);
 //         ledcWrite(1,motor_right_to_int);
+//         //delay(20);
 //       //ledcWrite(1,128);
 //       }
 //       else if(motor_left_to_int >=0 && motor_right_to_int <0)
@@ -134,6 +135,7 @@
 //         digitalWrite(motorpin1_b,LOW); //motor right
 //         digitalWrite(motorpin2_b,HIGH);
 //         ledcWrite(1,-motor_right_to_int);
+//         //delay(20);
 //       //ledcWrite(1,128);
 //       }
 //       else if(motor_left_to_int < 0 && motor_right_to_int >=0)
@@ -146,6 +148,7 @@
 //         digitalWrite(motorpin1_b,HIGH); //motor right
 //         digitalWrite(motorpin2_b,LOW);
 //         ledcWrite(1,motor_right_to_int);
+//         //delay(20);
 //       //ledcWrite(1,128);
 //       }
 //       else if(motor_left_to_int < 0 && motor_right_to_int <0)
@@ -158,13 +161,14 @@
 //         digitalWrite(motorpin1_b,LOW); //motor right
 //         digitalWrite(motorpin2_b,HIGH);
 //         ledcWrite(1,-motor_right_to_int);
+//        // delay(20);
 //       //ledcWrite(1,128);
 //       }
 
 
 //   }
-
-//  //delay(1);
+// delay(1);
+// //delay(10);
 // //  delay(1000);
 
 //   // Serial.print("motor left is");
@@ -175,6 +179,7 @@
 //   Serial.print(Encodervalue); //use dis for communictn wid computer
 //   Serial.print(',');
 //   Serial.println(Encodervalue_two);
+//  // delay(5);
 
 
 // }

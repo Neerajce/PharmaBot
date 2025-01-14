@@ -32,7 +32,10 @@ class TwistToMotors(Node):
         self.velct_max = 0.5
         self.pwm_min = 40
         self.pwm_max = 255
+        self.countr = 0
         self.pwm = 0
+        self.encoder_ticks_left_fresh = 0
+        self.encoder_ticks_right_fresh = 0
 
 
         #### parameters #######
@@ -71,13 +74,15 @@ class TwistToMotors(Node):
 
         self.left_and_rght_data_to_strng = 'c0,0'
 
+        self.drive_cmd_vel = [0] *2
+
         # publisher and timer
-        self.create_timer(0.001,self.fetch_encoder_data)
+        self.create_timer(0.002,self.fetch_encoder_data)
         self.odom_pub = self.create_publisher(Odometry, "odom", 10)
         self.odom_broadcaster = TransformBroadcaster(self)
 
         self.create_subscription(Twist, '/cmd_vel', self.twist_callback, 10)
-        self.create_timer(0.08, self.update)  
+        self.create_timer(0.08, self.update)
 
 
     def velct_to_pwm(self,vel):
@@ -108,6 +113,8 @@ class TwistToMotors(Node):
         return q
 
     def update(self):
+
+
         now = self.get_clock().now()
         elapsed = now - self.then
         self.then = now
@@ -181,6 +188,7 @@ class TwistToMotors(Node):
         odom.twist.twist.angular.z = self.dr
         self.odom_pub.publish(odom)
 
+
     def euler_from_quaternion(self,x, y, z, w): # dis isn't used
         """
         Convert a quaternion into euler angles (roll, pitch, yaw)
@@ -204,33 +212,42 @@ class TwistToMotors(Node):
         return roll_x, pitch_y, yaw_z # in radians
 
     def fetch_encoder_data(self):
-        line = self.ard.readline().decode("utf-8").strip()
+        line = self.ard.readline().decode("utf-8",errors='ignore').strip()
+        print('line is ')
+        print(line)
         try:
-            if line[0] == 'e':
-                gh = line.replace('e','')
-                temp  = gh.split(',')
-                print(temp)
-                if temp[0] == '' or temp[1] == '':
-                    encoder_ticks_right_fresh = self.encoder_ticks_right_old
-                    encoder_ticks_left_fresh = self.encoder_ticks_left_old
-                else:
-                    encoder_ticks_right_fresh = int(temp[1]) # when I keep dis +
-                    encoder_ticks_left_fresh = -int(temp[0]) # and dis -ve, I get both + pwm values when moved forward
+            if len(line) != 0:
+                if line[0] == 'e':
+                    gh = line.replace('e','')
+                    temp  = gh.split(',')
+                    print('temp is below')
+                    print(temp)
+                if len(temp) == 2:
+                    if temp[0] == '' or temp[1] == '':
+                        self.encoder_ticks_right_fresh = self.encoder_ticks_right_old
+                        self.encoder_ticks_left_fresh = self.encoder_ticks_left_old
+                    else:
+                        self.encoder_ticks_right_fresh = int(temp[1]) # when I keep dis +
+                        self.encoder_ticks_left_fresh = -int(temp[0]) # and dis -ve, I get both + pwm values when moved forward
             else:
-                encoder_ticks_left_fresh = self.encoder_ticks_left_old
-                encoder_ticks_right_fresh = self.encoder_ticks_right_old
-        except:
-            print('error in fetching data, dus ignoring')
-            encoder_ticks_right_fresh = self.encoder_ticks_right_old
-            encoder_ticks_left_fresh = self.encoder_ticks_left_old
+                self.encoder_ticks_left_fresh = self.encoder_ticks_left_old
+                self.encoder_ticks_right_fresh = self.encoder_ticks_right_old
+        except NameError as ne:
+            print('error in fetching data, dus ignoring' ,ne)
+            self.encoder_ticks_right_fresh = self.encoder_ticks_right_old
+            self.encoder_ticks_left_fresh = self.encoder_ticks_left_old
+        except ValueError as ve:
+            print('ignoring ',ve)
+            self.encoder_ticks_right_fresh = self.encoder_ticks_right_old
+            self.encoder_ticks_left_fresh = self.encoder_ticks_left_old
         
-        self.encoder_ticks_right_old = encoder_ticks_right_fresh
-        self.encoder_ticks_left_old = encoder_ticks_left_fresh
+        self.encoder_ticks_right_old = self.encoder_ticks_right_fresh
+        self.encoder_ticks_left_old = self.encoder_ticks_left_fresh
         print('encoder ticks left is')
-        print(encoder_ticks_right_fresh)
+        print(self.encoder_ticks_right_fresh)
         print('encoder ticks right is')
-        print(encoder_ticks_left_fresh)
-        enc_lft = encoder_ticks_left_fresh
+        print(self.encoder_ticks_left_fresh)
+        enc_lft = self.encoder_ticks_left_fresh
         if enc_lft < self.encoder_low_wrap and self.prevous_lft_encodr > self.encoder_high_wrap:
             self.lmult = self.lmult + 1
 
@@ -240,7 +257,7 @@ class TwistToMotors(Node):
         self.left = 1.0 * (enc_lft + self.lmult * (self.encoder_max - self.encoder_min))
         self.prevous_lft_encodr = enc_lft
 
-        enc_rght = encoder_ticks_right_fresh
+        enc_rght = self.encoder_ticks_right_fresh
         if enc_rght < self.encoder_low_wrap and self.prevous_rght_encodr > self.encoder_high_wrap:
             self.rmult = self.rmult + 1
 
@@ -249,6 +266,29 @@ class TwistToMotors(Node):
 
         self.right = 1.0 * (enc_rght + self.rmult * (self.encoder_max - self.encoder_min))
         self.prevous_rght_encodr = enc_rght
+
+        # print('self.countr is ',self.countr)
+        # self.countr = self.countr + 1
+        # if self.countr == 700:
+        #     left_and_rght_data_to_strng = 'c80,80'
+        #     self.ard.write(left_and_rght_data_to_strng.encode())
+        # if self.countr == 1500:
+        #     left_and_rght_data_to_strng = 'c120,120'
+        #     self.ard.write(left_and_rght_data_to_strng.encode())
+        # if self.countr == 2000:
+        #     left_and_rght_data_to_strng = 'c0,0'
+        #     self.ard.write(left_and_rght_data_to_strng.encode())
+        #     self.countr = 0
+
+        # Send motor pwm signal
+
+
+        # #if self.dx == 0.0 and self.dr == 0.0:
+        # if self.countr < 800:
+        #     left_and_rght_data_to_strng = 'c0,0'
+        #     self.ard.write(left_and_rght_data_to_strng.encode())
+        # else:
+        #     self.calculate_left_and_right_target_and_give_values()
     
 
     def calculate_left_and_right_target_and_give_values(self):
@@ -288,16 +328,29 @@ class TwistToMotors(Node):
     
     def send_dta(self):
         self.ard.write(self.left_and_rght_data_to_strng.encode())
+        self.get_logger().error("SENT SERIAL PWM DATA")
         
 
     def twist_callback(self, msg):
+        # self.countr = self.countr + 1
+        # if self.countr == 10000:
+        #     self.countr = 0
+        print('self.dx is ')
+        print(self.dx)
+        print('self.dr is ')
+        print(self.dr)
         self.dx = msg.linear.x
         self.dr = msg.angular.z
-        if self.dx == 0 and self.dr == 0:
+        if self.dx == 0.0 and self.dr == 0.0:
+        # if self.countr < 800:
             left_and_rght_data_to_strng = 'c0,0'
             self.ard.write(left_and_rght_data_to_strng.encode())
         else:
             self.calculate_left_and_right_target_and_give_values()
+
+        # if self.countr == 500:
+        #     left_and_rght_data_to_strng = 'c100,100'
+        #     self.ard.write(left_and_rght_data_to_strng.encode())
 
         print('self.dx is ',self.dx)
         print('self.dr is ',self.dr)
@@ -310,6 +363,7 @@ def main(args=None):
     rclpy.init(args=args)
     try:
         twist_to_motors = TwistToMotors()
+       # twist_to_motors.create_rate(50)
         rclpy.spin(twist_to_motors)
     except rclpy.exceptions.ROSInterruptException:
         pass
