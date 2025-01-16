@@ -25,7 +25,8 @@ class TwistToMotors(Node):
         super(TwistToMotors, self).__init__("twist_to_motors")
         self.nodename = "twist_to_motors"
         self.get_logger().info("%s started" % self.nodename)
-        self.ard = serial.Serial("/dev/ttyUSB0",115200)
+        self.ard_write = serial.Serial("/dev/ttyUSB0",115200) #pls chng dis as pr ESP32 usng | USB0 ESP32 stnds for motor driver ESP32
+        self.ard_read_two = serial.Serial("/dev/ttyUSB1",115200) # USB1 ESP32 stands for encoder ESP32
         self.dx = 0.0
         self.dr = 0.0
         self.velct_min = 0.05
@@ -212,7 +213,7 @@ class TwistToMotors(Node):
         return roll_x, pitch_y, yaw_z # in radians
 
     def fetch_encoder_data(self):
-        line = self.ard.readline().decode("utf-8",errors='ignore').strip()
+        line = self.ard_read_two.readline().decode("utf-8",errors='ignore').strip()
         print('line is ')
         print(line)
         try:
@@ -327,7 +328,7 @@ class TwistToMotors(Node):
         self.send_dta()
     
     def send_dta(self):
-        self.ard.write(self.left_and_rght_data_to_strng.encode())
+        self.ard_write.write(self.left_and_rght_data_to_strng.encode())
         self.get_logger().error("SENT SERIAL PWM DATA")
         
 
@@ -344,16 +345,13 @@ class TwistToMotors(Node):
         if self.dx == 0.0 and self.dr == 0.0:
         # if self.countr < 800:
             left_and_rght_data_to_strng = 'c0,0'
-            self.ard.write(left_and_rght_data_to_strng.encode())
+            self.ard_write.write(left_and_rght_data_to_strng.encode())
         else:
             self.calculate_left_and_right_target_and_give_values()
 
         # if self.countr == 500:
         #     left_and_rght_data_to_strng = 'c100,100'
         #     self.ard.write(left_and_rght_data_to_strng.encode())
-
-        print('self.dx is ',self.dx)
-        print('self.dr is ',self.dr)
 
 
 
