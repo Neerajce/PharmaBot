@@ -20,7 +20,7 @@ def main(args=None):
     nod = user_inpt_publshr()
     try:
         while True:
-            usr_inpt = input('Entr a string to publish ') # please keep angle format as a010b030m070d120f130 whre no stands as angle values in dgrs
+            usr_inpt = input('Entr a string to publish ') # please keep angle format as a010020030040050 whre no stands as angle values in dgrs , here 010, 020 stands for 10 and 20 dgrs of waist and shouldr rspctvly
             nod.publsh_usr_inpt(usr_inpt)
     except KeyboardInterrupt:
         pass
