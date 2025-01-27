@@ -3,7 +3,7 @@
 
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Float32
+from std_msgs.msg import Float32, String
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Quaternion
 from geometry_msgs.msg import TransformStamped
@@ -77,13 +77,16 @@ class TwistToMotors(Node):
 
         self.drive_cmd_vel = [0] *2
 
+        self.rbt_arm_strn = 'f000000000000000'
+
         # publisher and timer
         self.create_timer(0.002,self.fetch_encoder_data)
         self.odom_pub = self.create_publisher(Odometry, "odom", 10)
         self.odom_broadcaster = TransformBroadcaster(self)
 
         self.create_subscription(Twist, '/cmd_vel', self.twist_callback, 10)
-        self.create_timer(0.08, self.update)
+        self.create_subscription(String,'robot_arm_angles_here',self.give_robt_arm_angles,10)
+        self.create_timer(0.02, self.update)
 
 
     def velct_to_pwm(self,vel):
@@ -323,14 +326,22 @@ class TwistToMotors(Node):
         right_data_to_Strng = str(intrplt_right_data)
         left_data_to_Strng = str(intrplt_left_data)
 
-        self.left_and_rght_data_to_strng = 'c'+ left_data_to_Strng + ','+ right_data_to_Strng + ' '
+        self.left_and_rght_data_to_strng = 'o'+ ' ' + left_data_to_Strng + ' ' + right_data_to_Strng + 'v'
         print('left_and_rght_data_to_strng is ',self.left_and_rght_data_to_strng)
         self.send_dta()
     
     def send_dta(self):
         self.ard_write.write(self.left_and_rght_data_to_strng.encode())
         self.get_logger().error("SENT SERIAL PWM DATA")
-        
+
+    def give_robt_arm_angles(self,msg):
+        if len(msg.data) > 0:
+            self.rbt_arm_strn = msg.data
+            self.ard_write.write(self.rbt_arm_strn.encode())
+
+        else:
+            self.rbt_arm_strn = 'f000000000000000'
+
 
     def twist_callback(self, msg):
         # self.countr = self.countr + 1
@@ -344,7 +355,7 @@ class TwistToMotors(Node):
         self.dr = msg.angular.z
         if self.dx == 0.0 and self.dr == 0.0:
         # if self.countr < 800:
-            left_and_rght_data_to_strng = 'c0,0'
+            left_and_rght_data_to_strng = 'o 0 0v'
             self.ard_write.write(left_and_rght_data_to_strng.encode())
         else:
             self.calculate_left_and_right_target_and_give_values()
