@@ -37,13 +37,16 @@ class TwistToMotors(Node):
         self.pwm = 0
         self.encoder_ticks_left_fresh = 0
         self.encoder_ticks_right_fresh = 0
+        self.d_lft = 0
+        self.d_rght = 0
+        self.d = 0
 
 
         #### parameters #######
         self.rate_hz = self.declare_parameter("rate_hz", 10.0).value # the rate at which to publish the transform
 
 
-        self.ticks_meter = float(self.declare_parameter('ticks_meter', 944).value)  # The number of wheel encoder ticks per meter of travel
+        self.ticks_meter = float(self.declare_parameter('ticks_meter', 933).value)  # The number of wheel encoder ticks per meter of travel
         self.base_width = float(self.declare_parameter('base_width', 0.45).value)  # The wheel base width in meters
 
         self.base_frame_id = self.declare_parameter('base_frame_id','base_link').value  # the name of the base frame of the robot
@@ -129,20 +132,23 @@ class TwistToMotors(Node):
             d_left = 0
             d_right = 0
         else:
-            d_left = (self.left - self.enc_left) / self.ticks_meter
-            d_right = (self.right - self.enc_right) / self.ticks_meter
+            d_left = (self.left - self.enc_left) / self.ticks_meter  # dis value is zero, dus it seems useless
+            d_right = (self.right - self.enc_right) / self.ticks_meter # dis value is zero, dus it seems useless
+        self.d_lft = d_left
+        self.d_rght = d_right
         self.enc_left = self.left
         self.enc_right = self.right
 
         # distance traveled is the average of the two wheels 
         d = (d_left + d_right) / 2
+        self.d = d # 'd' value is zero
         # this approximation works (in radians) for small angles
         th = (d_right - d_left) / self.base_width
         # calculate velocities
         self.dx = d / elapsed
         self.dr = th / elapsed
 
-        if d != 0:
+        if d != 0: # 0 !=0 means dis condtn is true
             # calculate distance traveled in x and y
             x = cos(th) * d
             y = -sin(th) * d
@@ -217,6 +223,12 @@ class TwistToMotors(Node):
 
     def fetch_encoder_data(self):
         line = self.ard_read_two.readline().decode("utf-8",errors='ignore').strip()
+        print('self.d_lft is')
+        print(self.d_lft)
+        print('self.d_right is')
+        print(self.d_rght)
+        print('self.d is ')
+        print(self.d)
         print('line is ')
         print(line)
         try:
@@ -247,9 +259,9 @@ class TwistToMotors(Node):
         
         self.encoder_ticks_right_old = self.encoder_ticks_right_fresh
         self.encoder_ticks_left_old = self.encoder_ticks_left_fresh
-        print('encoder ticks left is')
-        print(self.encoder_ticks_right_fresh)
         print('encoder ticks right is')
+        print(self.encoder_ticks_right_fresh)
+        print('encoder ticks left is')
         print(self.encoder_ticks_left_fresh)
         enc_lft = self.encoder_ticks_left_fresh
         if enc_lft < self.encoder_low_wrap and self.prevous_lft_encodr > self.encoder_high_wrap:
@@ -304,8 +316,8 @@ class TwistToMotors(Node):
         
         right.data = self.dx # dis is useless I thnk since right.data is modfd
 
-        right.data = 1.0 * self.dx + self.dr * self.base_width / 2.0
-        left.data = 1.0 * self.dx - self.dr * self.base_width / 2.0
+        right.data = 1.0 * self.dx - self.dr * self.base_width / 2.0 # sign change at self.dx - self.dr is crucial as while turning clk or ant clk of robot, dese values change
+        left.data = 1.0 * self.dx + self.dr * self.base_width / 2.0  # sign change at self.dx + self.dr is crucial as while turning clk or ant clk of robot, dese values change
 
         print('right.data vel is ',right.data)
         print('left.data vel is ',left.data)

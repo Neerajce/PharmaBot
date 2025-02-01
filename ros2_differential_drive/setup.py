@@ -29,7 +29,8 @@ setup(
                             'virtual_joystick = differential_drive.virtual_joystick:main',
                             'wheel_loopback = differential_drive.wheel_loopback:main',
                             'wheel_scaler = differential_drive.wheel_scaler:main',
-                            'user_input_publisher = differential_drive.give_robot_arm_angles:main'
+                            'user_input_publisher = differential_drive.give_robot_arm_angles:main',
+                            'take_photos = differential_drive.take_photos:main' 
                             ],
     }
 )

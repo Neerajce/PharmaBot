@@ -19,6 +19,7 @@ def generate_launch_description():
         arguments = [
     '-configuration_directory', FindPackageShare('rbt_navigtn').find('rbt_navigtn') + '/config',
     '-configuration_basename', 'cartographer.lua'],
+        # remappings = [('/odom','/scan_odom')],
     output='screen'
     )
 
@@ -28,6 +29,7 @@ def generate_launch_description():
         parameters=[
             {'use_sim_time': False},
             {'resolution': 0.05}],
+        # remappings = [('/odom','/scan_odom')],
     )
 
     cartographer_config_dir = os.path.join(get_package_share_directory('rbt_navigtn'), 'config')
