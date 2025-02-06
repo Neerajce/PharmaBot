@@ -80,7 +80,7 @@ class TwistToMotors(Node):
 
         self.drive_cmd_vel = [0] *2
 
-        self.rbt_arm_strn = 'f000000000000000'
+        self.rbt_arm_strn = 'f 000000000000000'
 
         # publisher and timer
         self.create_timer(0.002,self.fetch_encoder_data)
@@ -177,7 +177,7 @@ class TwistToMotors(Node):
         transform_stamped_msg.child_frame_id = self.base_frame_id
         transform_stamped_msg.transform.translation.x = self.x
         transform_stamped_msg.transform.translation.y = self.y
-        transform_stamped_msg.transform.translation.z = 0.0
+        transform_stamped_msg.transform.translation.z = 0.0625  #wheel diamtr / 2
         transform_stamped_msg.transform.rotation.x = quaternion.x
         transform_stamped_msg.transform.rotation.y = quaternion.y
         transform_stamped_msg.transform.rotation.z = quaternion.z
@@ -352,7 +352,7 @@ class TwistToMotors(Node):
             self.ard_write.write(self.rbt_arm_strn.encode())
 
         else:
-            self.rbt_arm_strn = 'f000000000000000'
+            self.rbt_arm_strn = 'f 000000000000000'
 
 
     def twist_callback(self, msg):

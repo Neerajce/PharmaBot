@@ -15,21 +15,21 @@ extern "C" {
 MPU6050Sensor::MPU6050Sensor(int bus_number)
 {
   // TODO: make char append cleaner
-  filename_[9] = *std::to_string(bus_number).c_str();
-  std::cout << filename_ << std::endl;
-  file_ = open(filename_, O_RDWR);
-  if (file_ < 0) {
-    std::cerr << "Failed to open file descriptor! Check your bus number! Errno: "
-              << strerror(errno);
-    exit(1);
-  }
-  if (ioctl(file_, I2C_SLAVE, MPU6050_ADDRESS_DEFAULT) < 0) {
-    std::cerr << "Failed to find device address! Check device address!";
-    exit(1);
-  }
-  // Wake up sensor
-  int result = i2c_smbus_write_byte_data(file_, PWR_MGMT_1, 0);
-  if (result < 0) reportError(errno);
+  // filename_[9] = *std::to_string(bus_number).c_str();
+  // std::cout << filename_ << std::endl;
+  // file_ = open(filename_, O_RDWR);
+  // if (file_ < 0) {
+  //   std::cerr << "Failed to open file descriptor! Check your bus number! Errno: "
+  //             << strerror(errno);
+  //   exit(1);
+  // }
+  // if (ioctl(file_, I2C_SLAVE, MPU6050_ADDRESS_DEFAULT) < 0) {
+  //   std::cerr << "Failed to find device address! Check device address!";
+  //   exit(1);
+  // }
+  // // Wake up sensor
+  // int result = i2c_smbus_write_byte_data(file_, PWR_MGMT_1, 0);
+  // if (result < 0) reportError(errno);
   // Read current ranges from sensor
   readGyroscopeRange();
   readAccelerometerRange();
